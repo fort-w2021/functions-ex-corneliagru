@@ -23,11 +23,14 @@ cor(x = x, y = y, use = "pairwise.complete.obs", method = "kendall")
 
 # b ---------------------------------------------------
 
-# lazy evaluation
+# lazy evaluation and lexical scoping
 
-# the function returns 3 because of R's principle of lazy evaluation. For the
-# calculation of x + y it first tries to find the 'x' which assigns y the value
-# 1 and returns 2. Since 'y' got the value 1 the sum of x and y is 3.
+# the function returns 3 because of R's principle of lazy evaluation, where an
+# argument is only evaluated if it is needed. For the calculation of x + y it
+# first tries to find the 'x' which assigns y the value 1 and returns 2. Since
+# 'y' got the value 1 the sum of x and y is 3.
+
+
 
 f1 <- function(
                x =
@@ -80,6 +83,11 @@ f1b()
 
 # c -----------------------------------------------------------------------
 
+#lazy evaluation 
+
+#in the function argument we set x = z, eventhough z is not defined yet. This is
+#however not a problem because R only looks up the value for x when it is
+#needed. Directly before we call x we assign z <- 100 and x can be returned
 f2 <- function(x = z) {
   z <- 100
   x
