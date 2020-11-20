@@ -1,0 +1,169 @@
+## Faszinierend funkelnd funktional -funzen muss es halt!
+
+Lesen Sie das ["Functions"](http://adv-r.had.co.nz/Functions.html)-Kapitel aus dem *Advanced R Programming*-Buch von Hadley Wickham aufmerksam durch.
+
+### ACHTUNG: 
+Es wäre besser konkret darauf hinzuweisen die verlinkte Seite zu lesen, da direkt "You’re reading the first edition of Advanced R; for the latest on this topic, see the Functions chapter in the second edition." angezeigt wird. Ich dachte mir "supi eine aktuellere Version" und habe nicht gemerkt, dass die neue Version quasi nichts von den relevanten Themen erklärt. Upsi...
+
+
+a)  Schreiben Sie die folgenden verwirrenden Funktionsaufrufe so um dass sie möglichst klar & einfach zu verstehen sind:
+
+```{r, 1a, eval=FALSE}
+set.seed(20141012)
+x <- sample(replace = TRUE, 20, x = c(1:10, NA))
+y <- runif(min = 0, max = 1, 20)
+cor(m = "k", y = y, u = "p", x = x)
+```
+
+wird zu 
+
+```{r}
+
+# i don't see a problem here? maybe:
+set.seed(seed = 20141012)
+
+# wrong order and not explicitly named
+x <- sample(x = c(1:10, NA), size = 20, replace = TRUE)
+
+# wrong order maybe remove min and max since default values are used
+y <- runif(n = 20, min = 0, max = 1)
+y <- runif(n = 20)
+
+
+# argument names not correctly and remove abbreviation for clarity
+cor(x = x, y = y, use = "pairwise.complete.obs", method = "kendall")
+
+```
+
+
+
+b)  Was gibt diese Funktion zurück? Warum? Welches Prinzip illustriert sie?
+
+```{r, 1b, eval=FALSE}
+f1 <- function(x = {
+    y <- 1
+    2
+  }, y = 0) {
+  x + y
+}
+```
+
+*Hinweis:* Was passiert wenn Sie die letzte Zeile mit `y + x` ersetzen? Mit `c(y, x, y)`?
+
+
+Answer: lazy evaluation and lexical scoping
+
+the function returns 3 because of R's principle of lazy evaluation, where an
+argument is only evaluated if it is needed. For the calculation of x + y it
+first tries to find the 'x' which assigns y the value 1 and returns 2. Since
+'y' got the value 1 the sum of x and y is 3.
+
+Changing to `c(y, x, y)` returns `0 2 1` because the first y value is found as an argument, then the x is evaluated which sets y to 1.
+
+
+
+
+c)  Was gibt diese Funktion zurück? Warum? Welches Prinzip illustriert sie?
+
+```{r, 1c, eval=FALSE}
+f2 <- function(x = z) {
+  z <- 100
+  x
+}
+```
+
+Answer: lazy evaluation 
+
+in the function argument we set x = z, eventhough z is not defined yet. This is however not a problem because R only looks up the value for x when it is needed. Directly before we call x we assign z <- 100 and x can be returned
+
+
+
+d)  Schreiben sie eine *infix*-Funktion `%xor%` für `logical`-inputs die eine XOR-Operation (entweder-oder-aber-nicht-beides) durchführt. Überprüfen Sie ihre Funktion mit den folgenden Tests:
+
+```{r, code = readLines("test-functions-xor.R"), eval=FALSE}
+```
+
+Solution:
+```{r}
+# infix function for the logical xor operation
+`%xor%` <- function(x, y) {
+  assert_logical(x)
+  assert_logical(y)
+
+  xor(x, y)
+}
+
+# i could of course also copy the r-base function code
+`%xor%` <- function(x, y) {
+  assert_logical(x)
+  assert_logical(y)
+
+  (x | y) & !(x & y)
+}
+
+
+```
+
+
+
+e)  Wie kann jeweils der Zustand von `options()` und `par()` abgespeichert und wiederhergestellt werden?
+
+```{r warning=FALSE}
+old_par <- par()
+#change par here
+par(old_par)
+
+
+# or in case par is changed within a function you can use
+on.exit(par(old_par))
+
+
+# same for options
+
+old_options <- options()
+# do some changes on options
+options(old_options)
+
+
+```
+
+
+
+
+f)  Schreiben Sie eine Funktion die ein neues PDF-Grafikdevice öffnet, `plot` mit den übergebenen Argumenten aufruft und dann das zuvor geöffnete Grafikfenster wieder schließt, egal ob die übergebenen Argumente für `plot` funktioniert haben oder nicht.
+
+```{r}
+# a function that opens an pdf window, plots the given arguments and closes the
+# window again. plot will be saved in current working directory
+plot_pdf <- function(pdf_args = NULL, plot_args = NULL) {
+  assert_list(plot_args, all.missing = FALSE)
+
+  if (is.null(pdf_args)) {
+    pdf()
+  } else {
+    do.call(pdf, pdf_args)
+  }
+
+  do.call(plot, plot_args)
+  dev.off()
+}
+
+```
+
+
+
+
+g)  Was gibt der folgende Code zurück? Warum? Was bedeuten die drei verschiedenen `c`s in der zweiten Zeile?
+
+```{r, 1g, eval=FALSE}
+c <- 10
+c(c = c)
+```
+
+Answer:
+`c(name = value)`
+the first `c` calls the function `c()` which combines values into vectors or lists
+the second `c` is the name of the object
+the third `c` is the value which the vector will have
+
+
