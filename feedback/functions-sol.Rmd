@@ -1,0 +1,116 @@
+<!--
+Knitten Sie dieses File in RStudio zur besseren Lesbarkeit, bitte...
+-->
+
+```{r, child = "functions-ex.Rmd"}
+```
+
+----------------------------------------------------
+
+### Lösung:
+
+a) 
+
+```{r, 1a_sol, eval=FALSE}
+set.seed(20141012)
+sample_1 <- sample(c(1:10, NA), size = 20, replace = TRUE)
+sample_2 <- runif(20) # defaults müssen nicht übergeben werden
+cor(sample_1, sample_2, method = "kendall", use = "pairwise.complete.obs")
+```
+
+b)
+
+Aufruf `f1()` returniert 3. Wenn die Funktion aufgerufen wird werden zunächst die Argumente auf syntaktische Validität geprüft, aber noch nicht ausgewertet (*lazy evaluation*). Dann wird die erste Zeile im Funktionsrumpf ausgewertet. Das erste Symbol dort ist `x` und wird ersetzt durch den übergebenen Argumentwert `{y <- 1; 2}`, der übergebene Argumentwert wird ausgewertet. Bei der Auswertung wird zunächst dem Symbol `y` der Wert 1 zugewiesen und dann der Wert 2 zurückgegeben, letzteres ist der neue Wert der Variable `x`. Dann wird das Symbol `y` ausgewertet, und dieses hat nun eben den Wert 1, weil eine Variable `y` mit diesem Wert bereits im `execution environment` angelegt wurde. 
+
+c) 
+
+Der Funktionsaufruf `f2()` returniert 100. Diese Funktion demonstriert das Prinzip der *lazy evaluation*: Zu Beginn ist der Wert von `x` gleich dem der Variable `z`, einer bei Funktionsaufruf **undefinierten**(!)  Variable. Da `x` jedoch erst ausgewertet wird wenn es zum ersten Mal aufgerufen wird, ist es kein Problem dass damit der Wert von `x` zunächst undefiniert ist.
+In der ersten Zeile wird dann `z` der Wert 100 zugewiesen, und in der zweiten Zeile wird dann endlich `x` ausgewertet, was hier eben den Wert von `z` (also 100) zurückgibt.
+
+d) 
+```{r, 1d_sol}
+# Rad nicht neu erfinden: eine Funktion xor existiert bereits:
+xor
+
+# infix-Version davon also einfach:
+`%xor%` <- function(x, y) xor(x, y)
+
+# selbst-gestrickt zB so:
+# computes either-or-but-not-both ("exclusive or")
+# inputs: two vectors interpreted as logicals (R argument recycling rules apply)
+# output: a logical vector 
+`%xor%` <- function(x, y) {
+  checkmate::assert_atomic_vector(x)
+  checkmate::assert_atomic_vector(y)
+  # nutzt implizite type conversions nach logical aus:
+  (x | y) & (!(x & y))
+}
+# oder:
+`%xor%` <- function(x, y) {
+  checkmate::assert_atomic_vector(x)
+  checkmate::assert_atomic_vector(y)
+  # nutzt implizite type conversions nach logical aus:
+  (x & !y) | (y & !x)
+}
+# oder:
+`%xor%` <- function(x, y) {
+  checkmate::assert_atomic_vector(x)
+  checkmate::assert_atomic_vector(y)
+  as.logical(x) != as.logical(y)
+}
+# oder 
+`%xor%` <- function(x, y) {
+  checkmate::assert_atomic_vector(x)
+  checkmate::assert_atomic_vector(y)
+  # nutzt aus dass TRUE == 1 und FALSE == 0:
+  as.logical(x) + as.logical(y) == 1
+}
+```
+```{r, 1d_test}
+
+```
+
+e) 
+
+Auslesen/Abspeichern & Wiederherstellen von Systemoptionen `options`:
+```{r, 1e_sol_opts}
+current_options <- options()
+
+## ... do something
+
+# reset:
+options(current_options)
+```
+Auslesen/Abspeichern & Wiederherstellen von Grafikparametern `par`:
+```{r, 1e_sol_par}
+resettable_par <- par(no.readonly = TRUE)
+
+## do something
+
+# reset:
+par(resettable_par)
+```
+Ohne `no.readonly=TRUE` produziert `par(resettable_par)` Warnungen weil `resettable_par` dann Grafikparameter enthält die *user*-seitig nicht veränderbar sind.
+
+f) 
+
+Zum Beispiel so:
+```{r, 1f_sol_par}
+plot_pdf <- function(outfile = "Rplot.pdf", ...) {
+  old_par <- par(no.readonly = TRUE)
+  on.exit({
+    #only close device if it was opened by this function:
+    dev.off()
+    par(old_par)
+  })
+  pdf()
+  plot(...)
+}
+```
+
+
+g) 
+```{r, 1g, eval=TRUE}
+```
+Der Code erzeugt einen ein-elementigen Vektor mit Namen "c" und Wert 10. Das erste `c` ruft die *concatenation*-Funktion `c()` auf. Das zweite `c` definiert den Namen des ersten Arguments für die Funktion `c()` und damit des ersten Vektorelements des Rückgabewerts dieser Funktion. Das dritte `c` referenziert die Variable `c` die in der ersten Zeile auf den Wert 10 gesetzt wurde.
+
